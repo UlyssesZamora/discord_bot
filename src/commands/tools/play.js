@@ -12,10 +12,12 @@ module.exports = {
 
     async execute(interaction, client) {
         await interaction.deferReply();
-
-        console.log(PermissionsBitField.flags)
-
+        
         const voiceChannel = interaction.member.voice.channel;
+        if (!voiceChannel) {
+            return interaction.followUp('❌ You need to be in a voice channel to use this command!');
+        }
+        
         const permissions = voiceChannel.permissionsFor(interaction.client.user);
         if (!permissions.has(PermissionsBitField.Flags.Connect) || !permissions.has(PermissionsBitField.Flags.Speak)) {
             return interaction.followUp('❌ I need permissions to join and speak in your voice channel!');
