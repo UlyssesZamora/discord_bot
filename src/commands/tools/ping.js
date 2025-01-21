@@ -1,16 +1,18 @@
-const { SlashCommandBuilder} = require('discord.js')
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
-    data: new SlashCommandBuilder().setName('ping').setDescription('return ping'),
-    async execute(interaction) {
-        const message = await interaction.deferReply({
-            fetchReply: true
-        })
+  data: new SlashCommandBuilder().setName("ping").setDescription("return ping"),
+  async execute(interaction) {
+    const message = await interaction.deferReply({
+      fetchReply: true,
+    });
 
-        const newMessage = `Current Ping: ${message.createdTimestamp - interaction.createdTimestamp}`
+    const newMessage = `Current Ping: ${
+      message.createdTimestamp - interaction.createdTimestamp
+    }`;
 
-        await interaction.editReply({
-            content: newMessage
-        })
-    }
-}
+    await interaction.editReply({
+      content: newMessage,
+    });
+  },
+};
