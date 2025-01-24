@@ -1,9 +1,5 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  PermissionsBitField,
-} = require("discord.js");
-const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
+// src/commands/play.js
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -21,67 +17,32 @@ module.exports = {
 
     const voiceChannel = interaction.member.voice.channel;
     if (!voiceChannel) {
-      return interaction.followUp(
-        "❌ You need to be in a voice channel to use this command!"
-      );
+      return interaction.followUp("❌ You need to be in a voice channel!");
     }
 
-    const permissions = voiceChannel.permissionsFor(interaction.client.user);
-    if (
-      !permissions.has(PermissionsBitField.Flags.Connect) ||
-      !permissions.has(PermissionsBitField.Flags.Speak)
-    ) {
-      return interaction.followUp(
-        "❌ I need permissions to join and speak in your voice channel!"
-      );
-    }
-
-    const songQuery = interaction.options.getString("song");
     try {
-      // Get existing connection
-      let connection = getVoiceConnection(interaction.guildId);
+      const query = interaction.options.getString("song");
+      const playerManager = client.playerManager; // Assuming you store it in client
 
-      // If no connection exists or the connection is in a different channel, create a new one
-      if (!connection || connection.joinConfig.channelId !== voiceChannel.id) {
-        // Destroy the old connection if it exists
-        if (connection) {
-          connection.destroy();
-        }
+      // Get song info
+      const songInfo = await playerManager.getSongInfo(query);
+      const song = {
+        ...songInfo,
+        requestedBy: interaction.user.tag,
+      };
 
-        // Create new connection
-        connection = joinVoiceChannel({
-          channelId: voiceChannel.id,
-          guildId: interaction.guildId,
-          adapterCreator: interaction.guild.voiceAdapterCreator,
-          selfDeaf: false,
-          selfMute: false,
-        });
-
-        // Store the connection in the client's voice manager
-        client.voiceManager.connections.set(interaction.guildId, connection);
+      // Check if something is already playing
+      if (playerManager.isPlaying(interaction.guildId)) {
+        await playerManager.addToQueue(interaction.guildId, song);
+        return interaction.followUp(`📝 Added to queue: ${song.title}`);
       }
 
-      const embed = new EmbedBuilder()
-        .setTitle("🎵 Now Playing")
-        .setDescription(`**${songQuery}**`)
-        .setColor(0x18e1ee)
-        .setTimestamp(Date.now())
-        .addFields([
-          {
-            name: "Requested by",
-            value: interaction.user.username,
-            inline: true,
-          },
-        ]);
-
-      await interaction.followUp({
-        embeds: [embed],
-      });
+      // If nothing is playing, start playing this song
+      await playerManager.play(interaction, voiceChannel, song);
+      await interaction.followUp(`🎵 Now playing: ${song.title}`);
     } catch (error) {
-      console.error("Error details:", error);
-      await interaction.followUp(
-        "❌ There was an error playing this track! Make sure the URL is valid."
-      );
+      console.error("Error:", error);
+      await interaction.followUp("❌ There was an error playing this track!");
     }
   },
 };

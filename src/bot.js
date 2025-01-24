@@ -3,6 +3,7 @@ const { token } = process.env;
 const { Client, Collection, GatewayIntentBits } = require("discord.js");
 const { getVoiceConnection } = require("@discordjs/voice");
 const fs = require("fs");
+const PlayerManager = require("./managers/PlayerManager.js"); // Add .js and use relative path from bot.js
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -10,10 +11,7 @@ const client = new Client({
 
 client.commands = new Collection();
 client.commandArray = [];
-
-client.voiceManager = {
-  connections: new Map(),
-};
+client.playerManager = new PlayerManager();
 
 client.on("voiceStateUpdate", (oldState, newState) => {
   // If the bot was disconnected
