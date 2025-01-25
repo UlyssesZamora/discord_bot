@@ -22,7 +22,7 @@ module.exports = {
 
     try {
       const query = interaction.options.getString("song");
-      const playerManager = client.playerManager; // Assuming you store it in client
+      const playerManager = client.playerManager;
 
       // Get song info
       const songInfo = await playerManager.getSongInfo(query);
